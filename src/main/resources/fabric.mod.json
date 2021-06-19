@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "vulpineretribution",
+  "version": "${version}",
+
+  "name": "Vulpine Retribution",
+  "description": "Are your friends killing foxes? Installing this mod is a simple solution. ",
+  "authors": [
+    "Foxite"
+  ],
+  "contact": {
+    "sources": "https://github.com/Foxite/VulpineRetribution-Fabric"
+  },
+
+  "license": "AGPL-3.0",
+  "icon": "assets/vulpineretribution/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "nl.dirkkok.minecraft.fabric.vulpineretribution.VulpineRetribution"
+    ]
+  },
+  "mixins": [ ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.17.x",
+    "java": ">=16"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
