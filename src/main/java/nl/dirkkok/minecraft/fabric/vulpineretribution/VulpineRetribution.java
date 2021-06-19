@@ -36,6 +36,15 @@ public class VulpineRetribution implements ModInitializer {
 		bolt.setCosmetic(true); // Because we explicitly kill the player (regardless of current health or armor)
 		bolt.setPos(target.getX(), target.getY(), target.getZ());
 		target.getCommandSource().getWorld().spawnEntity(bolt);
+
+		// Pros:
+		// - Will display an appropriate death message.
+		// Cons:
+		// - Will not kill creative mode players or players with OP mod armor.
+		// - Totems of undying will let you get away with it.
+		// I could use both, but then someone with a totem would lose the totem while still being killed, which I don't want.
+		//target.damage(SmiteDamageSource.INSTANCE, 9001);
+
 		target.kill();
 	}
 }
