@@ -5,7 +5,7 @@ No amount of armor, quantum suits, totems of undying, creative mode or straight 
 
 If you install this mod on a server, then clients do not need the mod nor Fabric installed for it to work. If there are no other mods, or the other mods permit it, then clients can be vanilla.
 
-Built for Minecraft 1.17 with Fabric. Should probably work on most Fabric versions. Feel free to ask for a backport.
+Built for Minecraft 1.18 with Fabric. Should probably work on most Fabric versions. Feel free to ask for a backport.
 ### License
 This mod is licensed AGPL 3.0. The short version is that if you distribute a fork of this mod, you must also distribute the source code.
 Notably, under Affero, hosting a server with this mod installed constitutes distribution.
