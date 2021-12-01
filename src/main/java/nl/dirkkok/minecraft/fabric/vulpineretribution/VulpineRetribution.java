@@ -15,11 +15,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.BannedPlayerEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.DiscordWebhookExecutor;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.GenericWebhookExecutor;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.WebhookExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -70,13 +72,13 @@ public class VulpineRetribution implements ModInitializer {
 		});
 	}
 
-	private void banPlayer(ServerPlayerEntity player) {
+	private void banPlayer(@NotNull ServerPlayerEntity player) {
 		player.getCommandSource().getServer().getPlayerManager().getUserBanList().add(new BannedPlayerEntry(player.getGameProfile()));
 		kickPlayer(player);
 	}
 
-	private void kickPlayer(ServerPlayerEntity player) {
-		player.getCommandSource().getServer().getPlayerManager().remove(player);
+	private void kickPlayer(@NotNull ServerPlayerEntity player) {
+		player.networkHandler.disconnect(Text.of(">:("));
 	}
 
 	private void smiteEntity(Entity target) {
