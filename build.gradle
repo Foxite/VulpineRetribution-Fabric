@@ -16,16 +16,26 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	maven { // Cloth Config
+		url "https://maven.shedaniel.me/"
+	}
+    mavenCentral()
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
+    implementation 'io.github.mineflash07:discord-webhook:1.0.1'
+
+    // To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	modApi("me.shedaniel.cloth:cloth-config-fabric:6.0.42") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
