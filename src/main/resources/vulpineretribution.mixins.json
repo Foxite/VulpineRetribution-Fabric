@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "nl.dirkkok.minecraft.fabric.vulpineretribution.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [ "LivingEntityMixin" ],
+  "client": [ ],
+  "server": [
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

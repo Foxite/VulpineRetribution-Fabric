@@ -1,21 +1,19 @@
 package nl.dirkkok.minecraft.fabric.vulpineretribution;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.ConfigSerializer;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.BannedPlayerEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.DiscordWebhookExecutor;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.GenericWebhookExecutor;
 import nl.dirkkok.minecraft.fabric.vulpineretribution.webhooks.WebhookExecutor;
@@ -24,20 +22,21 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.Date;
 
 public class VulpineRetribution implements ModInitializer {
 	public static final String MODID = "vulpineretribution";
 	public static final Logger LOGGER = LogManager.getLogger(MODID);
+	private ModConfig m_Config;
 
 	@Override
 	public void onInitialize() {
 		AutoConfig.register(ModConfig.class, (config, aClass) -> new GsonConfigSerializer<>(config, aClass, new GsonBuilder().setPrettyPrinting().serializeNulls().create()));
-		ModConfig config = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
+		m_Config = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
 
 		WebhookExecutor webhookExecutor;
-		if (config.executeWebhook && config.webhookSettings != null && config.webhookSettings.url != null && config.webhookSettings.url.length() > 0) {
-			webhookExecutor = switch (config.webhookSettings.type) {
+		if (m_Config.executeWebhook && m_Config.webhookSettings != null && m_Config.webhookSettings.url != null && m_Config.webhookSettings.url.length() > 0) {
+			webhookExecutor = switch (m_Config.webhookSettings.type) {
 				case GENERIC -> new GenericWebhookExecutor();
 				case DISCORD -> new DiscordWebhookExecutor();
 			};
@@ -45,27 +44,63 @@ public class VulpineRetribution implements ModInitializer {
 			webhookExecutor = null;
 		}
 
-		ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((ServerWorld world, Entity entity, LivingEntity killedEntity) -> {
-			if (entity instanceof ServerPlayerEntity player && killedEntity.getType().getUntranslatedName().equals(config.targetEntity)) {
-				LOGGER.atInfo().log("Player {} killed a {}", entity.getName(), killedEntity.getType().getUntranslatedName());
+		EntityEvents.AFTER_TOTEM_ATTEMPT.register((Entity killedEntity, DamageSource source, boolean succeeded) -> {
+			LOGGER.atInfo().log("AAA");
+			if (!(m_Config.discountTotem && succeeded) && killedEntity.getType().getUntranslatedName().equals(m_Config.targetEntity)) {
+				ServerPlayerEntity player = null;
+				boolean definitive = true;
+				if (source.getAttacker() instanceof ServerPlayerEntity player_) {
+					player = player_;
+				} else if (m_Config.aggressiveBlaming) {
+					player = (ServerPlayerEntity) killedEntity.getWorld().getClosestPlayer(killedEntity, -1.0D);
+					definitive = false;
+				}
 
-				if (config.destroyItems) {
+				if (player == null) {
+					return;
+				}
+
+				LOGGER.atInfo().log("Player {} killed a {}", player.getName(), killedEntity.getType().getUntranslatedName());
+
+				StringBuilder message = null;
+
+				if (m_Config.explain) {
+					message = new StringBuilder();
+					if (!definitive) {
+						message.append("In their rage");
+					} else {
+						message.append("As punishment for your crimes");
+					}
+
+					message.append(", you have been smitten by the gods");
+				}
+
+				if (m_Config.destroyItems) {
 					player.getInventory().clear();
+					if (message != null) {
+						message.append(" and your items have been shattered");
+					}
+				}
+
+				if (message != null) {
+					message.append(".");
+
+					player.sendMessage(new LiteralText(message.toString()).setStyle(Style.EMPTY.withColor(0xFF0000)), false);
 				}
 
 				smiteEntity(player);
 
-				if (config.banPlayer) {
+				if (m_Config.banPlayer) {
 					banPlayer(player);
-				} else if (config.kickPlayer) {
+				} else if (m_Config.kickPlayer) {
 					kickPlayer(player);
 				}
 
 				if (webhookExecutor != null) {
 					try {
-						webhookExecutor.execute(config.webhookSettings, player.getEntityName(), killedEntity.getType().getUntranslatedName());
+						webhookExecutor.execute(m_Config.webhookSettings, player.getEntityName(), killedEntity.getType().getUntranslatedName());
 					} catch (IOException ex) {
-						LOGGER.atError().log("Error executing " + config.webhookSettings.type + " webhook: " + ex);
+						LOGGER.atError().log("Error executing " + m_Config.webhookSettings.type + " webhook: " + ex);
 					}
 				}
 			}
@@ -73,7 +108,13 @@ public class VulpineRetribution implements ModInitializer {
 	}
 
 	private void banPlayer(@NotNull ServerPlayerEntity player) {
-		player.getCommandSource().getServer().getPlayerManager().getUserBanList().add(new BannedPlayerEntry(player.getGameProfile()));
+		Date expiration;
+		if (m_Config.banDurationMinutes == 0) {
+			expiration = null;
+		} else {
+			expiration = new Date(new Date().getTime() + m_Config.banDurationMinutes * 60000L);
+		}
+		player.getCommandSource().getServer().getPlayerManager().getUserBanList().add(new BannedPlayerEntry(player.getGameProfile(), new Date(), "Vulpine Retribution", expiration, ">:("));
 		kickPlayer(player);
 	}
 

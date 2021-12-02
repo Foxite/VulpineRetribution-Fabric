@@ -9,7 +9,11 @@ public class ModConfig implements ConfigData {
     public boolean destroyItems;
     public boolean kickPlayer;
     public boolean banPlayer;
+    public int banDurationMinutes;
     public boolean executeWebhook;
+    public boolean aggressiveBlaming;
+    public boolean discountTotem;
+    public boolean explain;
     public WebhookSettings webhookSettings = new WebhookSettings();
 
     public static class WebhookSettings {
