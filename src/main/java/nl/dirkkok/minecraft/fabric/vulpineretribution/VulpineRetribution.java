@@ -52,7 +52,7 @@ public class VulpineRetribution implements ModInitializer {
 				if (source.getAttacker() instanceof ServerPlayerEntity player_) {
 					player = player_;
 				} else if (m_Config.aggressiveBlaming) {
-					player = (ServerPlayerEntity) killedEntity.getWorld().getClosestPlayer(killedEntity, -1.0D);
+					player = (ServerPlayerEntity) killedEntity.getWorld().getClosestPlayer(killedEntity, m_Config.maxBlamingDistance);
 					definitive = false;
 				}
 

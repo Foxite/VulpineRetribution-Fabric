@@ -12,6 +12,7 @@ public class ModConfig implements ConfigData {
     public int banDurationMinutes;
     public boolean executeWebhook;
     public boolean aggressiveBlaming;
+    public double maxBlamingDistance;
     public boolean discountTotem;
     public boolean explain;
     public WebhookSettings webhookSettings = new WebhookSettings();
