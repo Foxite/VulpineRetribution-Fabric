@@ -45,7 +45,6 @@ public class VulpineRetribution implements ModInitializer {
 		}
 
 		EntityEvents.AFTER_TOTEM_ATTEMPT.register((Entity killedEntity, DamageSource source, boolean succeeded) -> {
-			LOGGER.atInfo().log("AAA");
 			if (!(m_Config.discountTotem && succeeded) && killedEntity.getType().getUntranslatedName().equals(m_Config.targetEntity)) {
 				ServerPlayerEntity player = null;
 				boolean definitive = true;
