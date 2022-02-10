@@ -46,58 +46,64 @@ public class VulpineRetribution implements ModInitializer {
 
 		EntityEvents.AFTER_TOTEM_ATTEMPT.register((Entity killedEntity, DamageSource source, boolean succeeded) -> {
 			if (!(m_Config.discountTotem && succeeded) && killedEntity.getType().getUntranslatedName().equals(m_Config.targetEntity)) {
-				ServerPlayerEntity player = null;
+				Entity perp = null;
 				boolean definitive = true;
 				if (source.getAttacker() instanceof ServerPlayerEntity player_) {
-					player = player_;
+					perp = player_;
 				} else if (m_Config.aggressiveBlaming) {
-					player = (ServerPlayerEntity) killedEntity.getWorld().getClosestPlayer(killedEntity, m_Config.maxBlamingDistance);
+					perp = (ServerPlayerEntity) killedEntity.getWorld().getClosestPlayer(killedEntity, m_Config.maxBlamingDistance);
 					definitive = false;
+				} else {
+					perp = source.getAttacker();
 				}
 
-				if (player == null) {
+				if (perp == null) {
 					return;
 				}
 
-				LOGGER.atInfo().log("Player {} killed a {}", player.getName(), killedEntity.getType().getUntranslatedName());
+				LOGGER.atInfo().log("Player {} killed a {}", perp.getName(), killedEntity.getType().getUntranslatedName());
 
-				StringBuilder message = null;
+				if (perp instanceof ServerPlayerEntity player) {
+					StringBuilder message = null;
 
-				if (m_Config.explain) {
-					message = new StringBuilder();
-					if (!definitive) {
-						message.append("In their rage");
-					} else {
-						message.append("As punishment for your crimes");
+					if (m_Config.explain) {
+						message = new StringBuilder();
+						if (!definitive) {
+							message.append("In their rage");
+						} else {
+							message.append("As punishment for your crimes");
+						}
+
+						message.append(", you have been smitten by the gods");
 					}
 
-					message.append(", you have been smitten by the gods");
-				}
+					if (m_Config.destroyItems) {
+						player.getInventory().clear();
+						if (message != null) {
+							message.append(" and your items have been shattered");
+						}
+					}
 
-				if (m_Config.destroyItems) {
-					player.getInventory().clear();
 					if (message != null) {
-						message.append(" and your items have been shattered");
+						message.append(".");
+
+						player.sendMessage(new LiteralText(message.toString()).setStyle(Style.EMPTY.withColor(0xFF0000)), false);
 					}
 				}
 
-				if (message != null) {
-					message.append(".");
+				smiteEntity(perp);
 
-					player.sendMessage(new LiteralText(message.toString()).setStyle(Style.EMPTY.withColor(0xFF0000)), false);
-				}
-
-				smiteEntity(player);
-
-				if (m_Config.banPlayer) {
-					banPlayer(player);
-				} else if (m_Config.kickPlayer) {
-					kickPlayer(player);
+				if (perp instanceof ServerPlayerEntity player) {
+					if (m_Config.banPlayer) {
+						banPlayer(player);
+					} else if (m_Config.kickPlayer) {
+						kickPlayer(player);
+					}
 				}
 
 				if (webhookExecutor != null) {
 					try {
-						webhookExecutor.execute(m_Config.webhookSettings, player.getEntityName(), killedEntity.getType().getUntranslatedName());
+						webhookExecutor.execute(m_Config.webhookSettings, perp.getEntityName(), killedEntity.getType().getUntranslatedName());
 					} catch (IOException ex) {
 						LOGGER.atError().log("Error executing " + m_Config.webhookSettings.type + " webhook: " + ex);
 					}
